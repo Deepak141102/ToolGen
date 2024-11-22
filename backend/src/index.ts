@@ -37,8 +37,8 @@ db.connect((err) => {
 // CORS configuration to allow cross-origin requests from the frontend
 app.use(
     cors({
-        credentials: true,
-        origin: process.env.FRONTEND_BASE_URL // Frontend base URL for CORS
+        credentials: true, // Allow cookies to be sent with requests
+        origin: process.env.FRONTEND_BASE_URL // Allow requests only from the frontend's domain
     })
 );
 
