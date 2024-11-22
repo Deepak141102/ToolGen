@@ -7,6 +7,7 @@ import session from 'express-session'; // Importing session management middlewar
 import passport from 'passport'; // Passport for handling authentication
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'; // Google OAuth strategy for login
 import path from 'path'; // Path module for handling file paths
+import MongoStore from 'connect-mongo'; // Importing MongoDB store for session persistence
 
 // Initialize environment variables
 dotenv.config();
@@ -29,17 +30,20 @@ app.use(express.json());
 // Middleware to parse URL-encoded data
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware for managing user sessions
+// Session middleware with MongoDB store for managing user sessions
 app.use(
     session({
-        secret: [process.env.COOKIE_SECRET], // Secret key for sessions from .env file
+        secret: process.env.COOKIE_SECRET || 'default-secret', // Secret key for sessions from .env file
+        resave: false, // Do not force session save on every request
+        saveUninitialized: false, // Do not save uninitialized sessions
+        store: MongoStore.create({
+            mongoUrl: process.env.MONGO_URI || 'your-mongodb-connection-string', // MongoDB connection string
+        }),
         cookie: {
             secure: process.env.NODE_ENV === "production" ? true : "auto", // Secure cookies for production only
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie setting
             maxAge: 30 * 24 * 60 * 60 * 1000, // Set cookie expiry time for 30 days
         },
-        resave: false, // Do not force session save on every request
-        saveUninitialized: false, // Do not save uninitialized sessions
     })
 );
 
