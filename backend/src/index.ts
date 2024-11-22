@@ -7,7 +7,12 @@ import session from 'express-session'; // Importing session management middlewar
 import passport from 'passport'; // Passport for handling authentication
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'; // Google OAuth strategy for login
 import path from 'path'; // Path module for handling file paths
+import { fileURLToPath } from 'url'; // Used to resolve __dirname in ES module
 import MongoStore from 'connect-mongo'; // Importing MongoDB store for session persistence
+
+// Resolve __dirname for ES module compatibility
+const __filename = fileURLToPath(import.meta.url); // Resolving filename from import.meta.url
+const __dirname = path.dirname(__filename); // Resolving directory name
 
 // Initialize environment variables
 dotenv.config();
@@ -21,7 +26,7 @@ const PORT: number = parseInt(process.env.PORT || '3000');
 app.use(
     cors({
         credentials: true,
-        origin: process.env.FRONTEND_BASE_URL // Frontend base URL for CORS
+        origin: process.env.FRONTEND_BASE_URL, // Frontend base URL for CORS
     })
 );
 
@@ -55,10 +60,9 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID, // Google client ID from .env
     clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Google client secret from .env
-    callbackURL: '/auth/google/callback' // URL where Google sends user back after login
+    callbackURL: '/auth/google/callback', // URL where Google sends user back after login
 }, (accessToken, refreshToken, profile, done) => {
-    // Passport callback after successful login, sending user profile to done()
-    return done(null, profile);
+    return done(null, profile); // Passport callback after successful login, sending user profile to done()
 }));
 
 // Serialize user into session after successful login
