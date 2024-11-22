@@ -41,6 +41,13 @@ app.use(
         origin: process.env.FRONTEND_BASE_URL || 'http://localhost:3000', // Allow requests only from the frontend's domain
     })
 );
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', 'https://my-frontend-0ii1.onrender.com');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+});
+
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
