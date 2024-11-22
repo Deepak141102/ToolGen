@@ -1,7 +1,6 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -21,6 +20,7 @@
     "express": "^4.21.1",
     "express-session": "^1.18.1",
     "ioredis": "^5.4.1",
+    "mysql2": "^3.11.4",
     "nodemailer": "^6.9.15",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
@@ -29,7 +29,7 @@
     "session": "^0.1.0",
     "to-words": "^4.1.0",
     "tsx": "^4.7.2",
-    "winston": "^3.16.0"
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@types/connect-redis": "^0.0.23",
@@ -43,5 +43,6 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
-  }
+  },
+  "description": ""
 }

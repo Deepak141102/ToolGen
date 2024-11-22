@@ -2,17 +2,12 @@ import express, { Request, Response, NextFunction } from 'express'; // Imports E
 import dotenv from 'dotenv'; // Imports dotenv to manage environment variables
 import cors from 'cors'; // Imports CORS to handle cross-origin requests
 import winston from "winston"; // Logger for tracking errors and server info
+import mysql from 'mysql2'; // Importing mysql2 for database connection
 import routes from './routes/index.js'; // Importing routes from the routes folder
 import session from 'express-session'; // Importing session management middleware
 import passport from 'passport'; // Passport for handling authentication
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'; // Google OAuth strategy for login
 import path from 'path'; // Path module for handling file paths
-import { fileURLToPath } from 'url'; // Used to resolve __dirname in ES module
-import MongoStore from 'connect-mongo'; // Importing MongoDB store for session persistence
-
-// Resolve __dirname for ES module compatibility
-const __filename = fileURLToPath(import.meta.url); // Resolving filename from import.meta.url
-const __dirname = path.dirname(__filename); // Resolving directory name
 
 // Initialize environment variables
 dotenv.config();
@@ -20,13 +15,30 @@ dotenv.config();
 // Create an instance of the Express app
 const app = express();
 // Set the port for the server using an environment variable
-const PORT: number = parseInt(process.env.PORT || '3000');
+const PORT: number = parseInt(process.env.PORT || '5000');
+
+// MySQL connection
+const db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+// Connect to MySQL
+db.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        return;
+    }
+    console.log('Connected to MySQL');
+});
 
 // CORS configuration to allow cross-origin requests from the frontend
 app.use(
     cors({
         credentials: true,
-        origin: process.env.FRONTEND_BASE_URL, // Frontend base URL for CORS
+        origin: process.env.FRONTEND_BASE_URL // Frontend base URL for CORS
     })
 );
 
@@ -35,20 +47,17 @@ app.use(express.json());
 // Middleware to parse URL-encoded data
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware with MongoDB store for managing user sessions
+// Session middleware for managing user sessions
 app.use(
     session({
-        secret: process.env.COOKIE_SECRET || 'default-secret', // Secret key for sessions from .env file
-        resave: false, // Do not force session save on every request
-        saveUninitialized: false, // Do not save uninitialized sessions
-        store: MongoStore.create({
-            mongoUrl: process.env.MONGO_URI || 'your-mongodb-connection-string', // MongoDB connection string
-        }),
+        secret: [process.env.COOKIE_SECRET], // Secret key for sessions from .env file
         cookie: {
             secure: process.env.NODE_ENV === "production" ? true : "auto", // Secure cookies for production only
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site cookie setting
             maxAge: 30 * 24 * 60 * 60 * 1000, // Set cookie expiry time for 30 days
         },
+        resave: false, // Do not force session save on every request
+        saveUninitialized: false, // Do not save uninitialized sessions
     })
 );
 
@@ -60,9 +69,10 @@ app.use(passport.session());
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID, // Google client ID from .env
     clientSecret: process.env.GOOGLE_CLIENT_SECRET, // Google client secret from .env
-    callbackURL: '/auth/google/callback', // URL where Google sends user back after login
+    callbackURL: '/auth/google/callback' // URL where Google sends user back after login
 }, (accessToken, refreshToken, profile, done) => {
-    return done(null, profile); // Passport callback after successful login, sending user profile to done()
+    // Passport callback after successful login, sending user profile to done()
+    return done(null, profile);
 }));
 
 // Serialize user into session after successful login
@@ -104,6 +114,17 @@ app.get('/health', (req: Request, res: Response) => {
     res.sendStatus(200); // Send OK if user is authenticated
 });
 
+// Add MySQL route
+app.get('/users', (req, res) => {
+    db.query('SELECT * FROM users', (err, results) => {
+        if (err) {
+            res.status(500).send('Database query failed');
+            return;
+        }
+        res.json(results);
+    });
+});
+
 // Attach all routes defined in the routes folder
 app.use(routes);
 
@@ -134,12 +155,16 @@ app.get('/logout', (req, res, next) => {
 });
 
 // Route to get the logged-in user's profile
-app.get('/user', (req, res) => {
-    if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' }); // Send 401 if not authenticated
-    }
-    res.json(req.user); // Send user profile data if authenticated
+app.get('/users', (req, res) => {
+    db.query('SELECT * FROM users', (err, results) => {
+        if (err) {
+            res.status(500).send('Database query failed');
+            return;
+        }
+        res.json(results);
+    });
 });
+
 
 // Serve static files from the React app
 if (process.env.NODE_ENV === 'production') {

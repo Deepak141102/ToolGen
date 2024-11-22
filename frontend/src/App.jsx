@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import './App.css'
+import './App.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import Home from './pages/Home';
@@ -13,7 +13,9 @@ import Login from './pages/Login';
 function App() {
   const [email, setEmail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);  // New state to store user list
 
+  // Layout Component
   const Layout = () => (
     <>
       <Hero setEmail={setEmail} email={email} />
@@ -41,7 +43,7 @@ function App() {
           path: "/home",
           element: (
             <ProtectedRoute email={email}>
-              <Home email={email} setEmail={setEmail} />
+              <Home email={email} setEmail={setEmail} users={users} /> {/* Pass users to Home */}
             </ProtectedRoute>
           ),
         },
@@ -50,6 +52,7 @@ function App() {
     },
   ]);
 
+  // Fetch user info and user list on mount
   useEffect(() => {
     const fetchUser = async () => {
       setLoading(true);
@@ -63,9 +66,21 @@ function App() {
       } finally {
         setLoading(false);
       }
-    }
-    fetchUser();
+    };
+
+    const fetchUsers = async () => {
+      try {
+        const userListResponse = await axios.get(`${import.meta.env.VITE_BACKEND_BASE_URL}/users`);
+        setUsers(userListResponse.data);  // Set the fetched users
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUser();  // Fetch user details
+    fetchUsers(); // Fetch users list
   }, []);
+
   return (
     <>
       <RouterProvider router={router} />
@@ -73,4 +88,4 @@ function App() {
   );
 }
 
-export default App
+export default App;
