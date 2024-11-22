@@ -38,7 +38,7 @@ db.connect((err) => {
 app.use(
     cors({
         credentials: true, // Allow cookies to be sent with requests
-        origin: process.env.FRONTEND_BASE_URL // Allow requests only from the frontend's domain
+        origin: process.env.FRONTEND_BASE_URL || 'http://localhost:3000', // Allow requests only from the frontend's domain
     })
 );
 
@@ -52,7 +52,7 @@ app.use(
     session({
         secret: process.env.COOKIE_SECRET || 'defaultsecret', // Provide a default value for development
         cookie: {
-            secure: process.env.NODE_ENV === "production" ? true : "auto", 
+            secure: process.env.NODE_ENV === "production", // Secure cookies in production
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", 
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         },
